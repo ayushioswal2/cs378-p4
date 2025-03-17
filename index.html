@@ -1,105 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .city-buttons { margin-bottom: 10px; }
-        .city-buttons button { margin-right: 5px; }
-        #error-message { color: red; display: none; }
-    </style>
-</head>
-<body>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Weather App</title>
+		<style>
+			body { font-family: Arial, sans-serif; }
+			.city-buttons { margin-bottom: 10px; }
+			.city-buttons button { margin-right: 5px; }
+			#error-message { color: red; display: none; }
+		</style>
+	</head>
+	<body>
 
-    <h1>Weather App</h1>
-    <div class="city-buttons">
-        <button onclick="fetchWeather('Austin')">Austin</button>
-        <button onclick="fetchWeather('Dallas')">Dallas</button>
-        <button onclick="fetchWeather('Houston')">Houston</button>
-    </div>
-    <input type="text" id="city-input" placeholder="Enter a city">
-    <button onclick="addCity()">+</button>
-    <p id="error-message"></p>
+		<h1>Weather App</h1>
+		<div class="city-buttons">
+			<button onclick="fetchWeather('Austin')">Austin</button>
+			<button onclick="fetchWeather('Dallas')">Dallas</button>
+			<button onclick="fetchWeather('Houston')">Houston</button>
+		</div>
+		<input type="text" id="city-input" placeholder="Enter a city">
+		<button onclick="addCity()">+</button>
+		<p id="error-message"></p>
 
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>Temperature</th>
-            </tr>
-        </thead>
-        <tbody id="weather-data"></tbody>
-    </table>
+		<table border="1">
+			<thead>
+				<tr>
+					<th>Time</th>
+					<th>Temperature</th>
+				</tr>
+			</thead>
+			<tbody id="weather-data"></tbody>
+		</table>
 
-    <script>
-        const API_BASE = "https://api.open-meteo.com/v1/forecast";
-        const GEO_API_BASE = "https://geocoding-api.open-meteo.com/v1/search";
+		<script>
+			const API_BASE = "https://api.open-meteo.com/v1/forecast";
+			const GEO_API_BASE = "https://geocoding-api.open-meteo.com/v1/search";
 
-        async function fetchWeather(city) {
-            document.getElementById("error-message").style.display = "none";
+			async function fetchWeather(city) {
+				document.getElementById("error-message").style.display = "none";
 
-            try {
-                // Fetch city coordinates
-                let geoRes = await fetch(`${GEO_API_BASE}?name=${city}&count=1`);
-                let geoData = await geoRes.json();
+				try {
+					// Fetch city coordinates
+					let geoRes = await fetch(`${GEO_API_BASE}?name=${city}&count=1`);
+					let geoData = await geoRes.json();
 
-                if (!geoData.results || geoData.results.length === 0) {
-                    throw new Error(`Could not find weather for ${city}`);
-                }
+					if (!geoData.results || geoData.results.length === 0) {
+						throw new Error(`Could not find weather for ${city}`);
+					}
 
-                let { latitude, longitude, timezone } = geoData.results[0];
+					let { latitude, longitude, timezone } = geoData.results[0];
 
-                // Fetch weather data
-                let weatherRes = await fetch(`${API_BASE}?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m&temperature_unit=fahrenheit`);
-                let weatherData = await weatherRes.json();
+					// Fetch weather data
+					let weatherRes = await fetch(`${API_BASE}?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m&temperature_unit=fahrenheit`);
+					let weatherData = await weatherRes.json();
 
-                displayWeather(weatherData.hourly.time, weatherData.hourly.temperature_2m, timezone);
-            } catch (error) {
-                document.getElementById("error-message").innerText = error.message;
-                document.getElementById("error-message").style.display = "block";
-            }
-        }
+					displayWeather(weatherData.hourly.time, weatherData.hourly.temperature_2m, timezone);
+				} catch (error) {
+					document.getElementById("error-message").innerText = error.message;
+					document.getElementById("error-message").style.display = "block";
+				}
+			}
 
-        function displayWeather(times, temps, timezone) {
-            let tableBody = document.getElementById("weather-data");
-            tableBody.innerHTML = "";
+			function displayWeather(times, temps, timezone) {
+				let tableBody = document.getElementById("weather-data");
+				tableBody.innerHTML = "";
 
-            // Convert UTC times to local time
-            let weatherData = times.map((time, index) => ({
-                time: formatLocalTime(time, timezone),
-                temperature: temps[index]
-            }));
+				// Convert UTC times to local time
+				let weatherData = times.map((time, index) => ({
+					time: formatLocalTime(time, timezone),
+					temperature: temps[index]
+				}));
 
-            // Show only the latest 10 data points
-            weatherData = weatherData.slice(-10);
+				// Show only the latest 10 data points
+				weatherData = weatherData.slice(-10);
 
-            // Display the data
-            weatherData.forEach((data) => {
-                let row = `<tr><td>${data.time}</td><td>${data.temperature.toFixed(1)} °F</td></tr>`;
-                tableBody.innerHTML += row;
-            });
-        }
+				// Display the data
+				weatherData.forEach((data) => {
+					let row = `<tr><td>${data.time}</td><td>${data.temperature.toFixed(1)} °F</td></tr>`;
+					tableBody.innerHTML += row;
+				});
+			}
 
-        function formatLocalTime(utcTimeString, timezone) {
-            let date = new Date(utcTimeString);
-            return date.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-                timeZone: timezone
-            });
-        }
+			function formatLocalTime(utcTimeString, timezone) {
+				let date = new Date(utcTimeString);
+				return date.toLocaleTimeString("en-US", {
+					hour: "numeric",
+					minute: "2-digit",
+					hour12: true,
+					timeZone: timezone
+				});
+			}
 
-        function addCity() {
-            let cityInput = document.getElementById("city-input").value.trim();
-            if (cityInput) fetchWeather(cityInput);
-        }
+			function addCity() {
+				let cityInput = document.getElementById("city-input").value.trim();
+				if (cityInput) fetchWeather(cityInput);
+			}
 
-        // Fetch default city, Austin, on page load
-        fetchWeather("Austin");
-    </script>
+			// Fetch default city, Austin, on page load
+			fetchWeather("Austin");
+		</script>
 
-</body>
+	</body>
 </html>
