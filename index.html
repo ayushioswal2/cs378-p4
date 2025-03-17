@@ -14,7 +14,7 @@
 	<body>
 
 		<h1>Weather App</h1>
-		<div class="city-buttons">
+		<div class="city-buttons" id="city-buttons">
 			<button onclick="fetchWeather('Austin')">Austin</button>
 			<button onclick="fetchWeather('Dallas')">Dallas</button>
 			<button onclick="fetchWeather('Houston')">Houston</button>
@@ -41,7 +41,7 @@
 				document.getElementById("error-message").style.display = "none";
 
 				try {
-					// Fetch city coordinates
+					// Get city coordinates
 					let geoRes = await fetch(`${GEO_API_BASE}?name=${city}&count=1`);
 					let geoData = await geoRes.json();
 
@@ -94,7 +94,23 @@
 
 			function addCity() {
 				let cityInput = document.getElementById("city-input").value.trim();
-				if (cityInput) fetchWeather(cityInput);
+				if (!cityInput) return;
+
+				let cityButtonsDiv = document.getElementById("city-buttons");
+
+				// Check if the city button already exists
+				if ([...cityButtonsDiv.children].some(button => button.innerText === cityInput)) {
+					fetchWeather(cityInput); // Fetch weather without adding a duplicate button
+					return;
+				}
+
+				// Create new button
+				let newButton = document.createElement("button");
+				newButton.innerText = cityInput;
+				newButton.onclick = () => fetchWeather(cityInput);
+				cityButtonsDiv.appendChild(newButton);
+
+				fetchWeather(cityInput); // Fetch weather when added
 			}
 
 			// Fetch default city, Austin, on page load
